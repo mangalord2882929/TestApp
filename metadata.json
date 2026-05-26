@@ -1,0 +1,6 @@
+{
+  "name": "Chronos Sync",
+  "description": "A polished cross-device calendar and task reminder app, built with Room, Jetpack Compose, and custom notification patterns.",
+  "requestFramePermissions": [],
+  "majorCapabilities": ["MAJOR_CAPABILITY_SERVER_SIDE_GEMINI_API"]
+}
