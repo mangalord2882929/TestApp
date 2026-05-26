@@ -46,6 +46,7 @@ import androidx.compose.material3.Scaffold
 import androidx.compose.material3.Surface
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
@@ -79,6 +80,10 @@ import java.util.Locale
 
 @Keep
 class MainActivity : ComponentActivity() {
+    private val requestNotificationPermissionLauncher = registerForActivityResult(
+        ActivityResultContracts.RequestPermission()
+    ) { /* Handled gracefully internally */ }
+
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
         enableEdgeToEdge()
@@ -86,27 +91,25 @@ class MainActivity : ComponentActivity() {
         // Setup premium notifications configuration
         NotificationHelper.createNotificationChannels(this)
 
-        // Request POST_NOTIFICATIONS permission at startup on Android 13+ (SDK 33)
-        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.TIRAMISU) {
-            val launcher = registerForActivityResult(
-                ActivityResultContracts.RequestPermission()
-            ) { /* Handled gracefully internally */ }
-            
-            if (ContextCompat.checkSelfPermission(
-                    this,
-                    Manifest.permission.POST_NOTIFICATIONS
-                ) != PackageManager.PERMISSION_GRANTED
-            ) {
-                launcher.launch(Manifest.permission.POST_NOTIFICATIONS)
-            }
-        }
-
         // Initialize repository manually to support simple MVVM with no heavy injection libraries
         val database = AppDatabase.getDatabase(this)
         val repository = CalendarRepository(database.entryDao())
 
         setContent {
             MyApplicationTheme {
+                // Safely request permission after full creation has successfully loaded
+                LaunchedEffect(Unit) {
+                    if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.TIRAMISU) {
+                        if (ContextCompat.checkSelfPermission(
+                                this@MainActivity,
+                                Manifest.permission.POST_NOTIFICATIONS
+                            ) != PackageManager.PERMISSION_GRANTED
+                        ) {
+                            requestNotificationPermissionLauncher.launch(Manifest.permission.POST_NOTIFICATIONS)
+                        }
+                    }
+                }
+
                 // Load Viewmodel
                 val viewModel: CalendarViewModel = viewModel(
                     factory = CalendarViewModel.Factory(application, repository)

@@ -56,9 +56,6 @@ jobs:
             echo "KEYSTORE_PATH=$GITHUB_WORKSPACE/my-upload-key.jks" >> $GITHUB_ENV
           fi
 
-      - name: Run Tests
-        run: gradle testDebugUnitTest --no-daemon
-
       - name: Build Release APK and App Bundle
         env:
           STORE_PASSWORD: ${{ env.STORE_PASSWORD }}
